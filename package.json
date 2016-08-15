@@ -1,0 +1,35 @@
+{
+  "name": "mywatchface",
+  "author": "MakeAwesomeHappen",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "mywatchface",
+    "uuid": "6bf83d5c-2d8c-4f03-86c9-4f9c638b6e8c",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk"
+    ],
+    "watchapp": {
+      "watchface": false
+    },
+    "messageKeys": [
+      "dummy"
+    ],
+    "resources": {
+      "media": [
+        {
+          "type": "font",
+          "name": "FONT_ROBOTO_22",
+          "file": "fonts/RobotoCondensed-Regular.ttf",
+          "compatibility":"2.7"
+        }
+      ]
+    }
+  }
+}
