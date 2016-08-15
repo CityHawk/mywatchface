@@ -30,7 +30,7 @@ static void prv_window_load(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
 
-    s_hands_layer = layer_create(GRect(0,144,0,144));
+    s_hands_layer = layer_create(GRect(0,0,144,144));
     layer_set_update_proc(s_hands_layer, hands_update_proc);
     layer_add_child(window_layer, s_hands_layer);
 
@@ -75,26 +75,28 @@ static void prv_deinit(void) {
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
-    update_time();
+  update_time();
+  layer_mark_dirty(s_hands_layer);
 }
 
 static void hands_update_proc(Layer *layer, GContext *ctx) {
-    /* s_minute_arrow = gpath_create(&MINUTE_HAND_POINTS); */
-    /* s_hour_arrow = gpath_create(&HOUR_HAND_POINTS); */
+    s_minute_arrow = gpath_create(&MINUTE_HAND_POINTS);
+    s_hour_arrow = gpath_create(&HOUR_HAND_POINTS);
+    GPoint center = GPoint(72,72);
+    gpath_move_to(s_minute_arrow, center);
+    gpath_move_to(s_hour_arrow, center);
+  
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    gpath_rotate_to(s_minute_arrow, TRIG_MAX_ANGLE * t->tm_min / 60);
+    gpath_rotate_to(s_hour_arrow, TRIG_MAX_ANGLE * t->tm_hour / 60);
 
-    // Set the line color
-    graphics_context_set_stroke_color(ctx, GColorRed);
 
-    // Set the fill color
-    graphics_context_set_fill_color(ctx, GColorBlue);
+    gpath_draw_filled(ctx, s_minute_arrow);
+    gpath_draw_outline(ctx, s_minute_arrow);
 
-
-    GRect foo = GRect(5,5,20,20);
-    graphics_draw_rect(ctx, foo);
-    graphics_fill_rect(ctx, foo, 1,GCornersAll);
-    /* gpath_draw_filled(ctx, s_minute_arrow); */
-    /* gpath_draw_outline(ctx, s_minute_arrow); */
-
+    gpath_draw_filled(ctx, s_hour_arrow);
+    gpath_draw_outline(ctx, s_hour_arrow);
 }
 
 int main(void) {

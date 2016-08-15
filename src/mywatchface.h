@@ -1,17 +1,19 @@
 #include <pebble.h>
 
 static const GPathInfo MINUTE_HAND_POINTS = {
-  3, (GPoint []) {
-    { 0, 20 },
-    { 8, 20 },
-    { 0, 80 }
+  4, (GPoint []) {
+    { -3, 10 },
+    { 3, 10 },
+    { 3, -60 },
+      {-3, -60}
   }
 };
 
 static const GPathInfo HOUR_HAND_POINTS = {
-  3, (GPoint []){
-    {-6, 20},
-    {6, 20},
-    {0, -60}
+  4, (GPoint []){
+    {-3, 10},
+    {3, 10},
+    {3, -40},
+    {-3,-40}
   }
 };
