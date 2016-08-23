@@ -14,32 +14,38 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed);
 static void hands_update_proc(Layer *layer, GContext *ctx);
 static void ticks_update_proc(Layer *layer, GContext *ctx);
 static void digital_update_proc(Layer *layer, GContext *ctx);
+static void date_update_proc(Layer *layer, GContext *ctx);
 
 static void prv_window_load(Window *window) {
 
     window_set_background_color(window, GColorBlack);
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
-    s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TIME_18));
+    s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TIME_20));
     s_label_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TIME_14));
 
     s_ticks_layer = layer_create(GRect(0, 0, 144, 144));
     layer_set_update_proc(s_ticks_layer, ticks_update_proc);
     layer_add_child(window_layer, s_ticks_layer);
-    
+
     s_hands_layer = layer_create(GRect(12,12,120,120));
     layer_set_update_proc(s_hands_layer, hands_update_proc);
     layer_add_child(window_layer, s_hands_layer);
 
 
-    s_digital_layer = layer_create(GRect(0, 144, bounds.size.w, 24));
+    s_digital_layer = layer_create(GRect(0, 146, 48, 20));
     layer_set_update_proc(s_digital_layer, digital_update_proc);
     layer_add_child(window_layer, s_digital_layer);
+
+    s_date_layer = layer_create(GRect(48, 146, 96, 20));
+    layer_set_update_proc(s_date_layer, date_update_proc);
+    layer_add_child(window_layer, s_date_layer);
 
     // Redraw this as soon as possible
     layer_mark_dirty(s_ticks_layer);
     layer_mark_dirty(s_hands_layer);
     layer_mark_dirty(s_digital_layer);
+    layer_mark_dirty(s_date_layer);
 }
 
 static void prv_window_unload(Window *window) {
@@ -73,6 +79,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     layer_mark_dirty(s_ticks_layer);
     layer_mark_dirty(s_hands_layer);
     layer_mark_dirty(s_digital_layer);
+    layer_mark_dirty(s_date_layer);
 }
 
 static void hands_update_proc(Layer *layer, GContext *ctx) {
@@ -82,7 +89,7 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
     GPoint center = GPoint(bounds.size.w/2,bounds.size.h/2);
     gpath_move_to(s_minute_arrow, center);
     gpath_move_to(s_hour_arrow, center);
-  
+
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
     gpath_rotate_to(s_minute_arrow, TRIG_MAX_ANGLE * t->tm_min / 60);
@@ -104,12 +111,25 @@ static void digital_update_proc(Layer *layer, GContext *ctx) {
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
 
-    char s_buffer[20];
-    strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ?  "%H:%M %a %m/%d" : "%I:%M %a %m/%d", t);
+    char s_buffer[6];
+    strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ?  "%H:%M" : "%I:%M", t);
 
     /* GTextAttributes *text_attrs = graphics_text_attributes_create(); */
     graphics_draw_text(ctx, s_buffer, s_time_font,
-                       layer_get_bounds(layer), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+            layer_get_bounds(layer), GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+
+}
+
+static void date_update_proc(Layer *layer, GContext *ctx) {
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+
+    char s_buffer[10];
+    strftime(s_buffer, sizeof(s_buffer), "%a %m/%d", t);
+
+    /* GTextAttributes *text_attrs = graphics_text_attributes_create(); */
+    graphics_draw_text(ctx, s_buffer, s_time_font,
+            layer_get_bounds(layer), GTextOverflowModeFill, GTextAlignmentRight, NULL);
 
 }
 
@@ -118,47 +138,47 @@ static void ticks_update_proc(Layer *layer, GContext *ctx) {
     GPoint center = GPoint(bounds.size.w/2,bounds.size.h/2);
     graphics_context_set_fill_color(ctx, GColorLightGray);
     graphics_context_set_stroke_color(ctx, GColorLightGray);
-    
+
     int16_t ray_length = 111;
-    
-  for (int i = 0; i < 59; ++i) {
-    GPoint ray_endpoint = {
-      .x = (int16_t)(sin_lookup(TRIG_MAX_ANGLE * i / 60) * (int32_t)ray_length / TRIG_MAX_RATIO) + center.x,
-      .y = (int16_t)(-cos_lookup(TRIG_MAX_ANGLE * i / 60) * (int32_t)ray_length / TRIG_MAX_RATIO) + center.y,
-    };
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "X %d, Y %d", ray_endpoint.x, ray_endpoint.y);
 
-    graphics_draw_line(ctx, ray_endpoint, center);
-  }
-    
-      graphics_context_set_fill_color(ctx, GColorOrange);
-  graphics_context_set_stroke_color(ctx, GColorOrange);
-    
+    for (int i = 0; i < 59; ++i) {
+        GPoint ray_endpoint = {
+            .x = (int16_t)(sin_lookup(TRIG_MAX_ANGLE * i / 60) * (int32_t)ray_length / TRIG_MAX_RATIO) + center.x,
+            .y = (int16_t)(-cos_lookup(TRIG_MAX_ANGLE * i / 60) * (int32_t)ray_length / TRIG_MAX_RATIO) + center.y,
+        };
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "X %d, Y %d", ray_endpoint.x, ray_endpoint.y);
+
+        graphics_draw_line(ctx, ray_endpoint, center);
+    }
+
+    graphics_context_set_fill_color(ctx, GColorOrange);
+    graphics_context_set_stroke_color(ctx, GColorOrange);
+
     int ray_angles[12] = { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55};
-  for (int i = 0; i < 12; ++i) {
-    GPoint ray_endpoint = {
-      .x = (int16_t)(sin_lookup(TRIG_MAX_ANGLE * ray_angles[i] / 60) * (int32_t)ray_length / TRIG_MAX_RATIO) + center.x,
-      .y = (int16_t)(-cos_lookup(TRIG_MAX_ANGLE * ray_angles[i] / 60) * (int32_t)ray_length / TRIG_MAX_RATIO) + center.y,
-    };
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "X %d, Y %d", ray_endpoint.x, ray_endpoint.y);
+    for (int i = 0; i < 12; ++i) {
+        GPoint ray_endpoint = {
+            .x = (int16_t)(sin_lookup(TRIG_MAX_ANGLE * ray_angles[i] / 60) * (int32_t)ray_length / TRIG_MAX_RATIO) + center.x,
+            .y = (int16_t)(-cos_lookup(TRIG_MAX_ANGLE * ray_angles[i] / 60) * (int32_t)ray_length / TRIG_MAX_RATIO) + center.y,
+        };
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "X %d, Y %d", ray_endpoint.x, ray_endpoint.y);
 
-     /* GPathInfo bold_tick_points = {4, (GPoint[]) {
-          {center.x+1, center.y+1},
-          {center.x-1, center.y-1},
-          {ray_endpoint.x-1, ray_endpoint.y-1},
-          {ray_endpoint.x+1, ray_endpoint.y+1}
-      }
-    };
-      GPath bold_tick = gpath_create({4, (GPoint[]) { {center.x+1, center.y+1}, {center.x-1, center.y-1}, {ray_endpoint.x-1, ray_endpoint.y-1}, {ray_endpoint.x+1, ray_endpoint.y+1} } });
-      gpath_draw_filled(ctx, bold_tick); */
-    graphics_draw_line(ctx, ray_endpoint, center);
-  }
-  
-    
-  graphics_context_set_fill_color(ctx, GColorBlack);
-  graphics_context_set_stroke_color(ctx, GColorBlack);
-  graphics_fill_rect(ctx, GRect(6, 6, bounds.size.w - 12, bounds.size.h - 12), 5, GCornersAll);
-    
+        /* GPathInfo bold_tick_points = {4, (GPoint[]) {
+           {center.x+1, center.y+1},
+           {center.x-1, center.y-1},
+           {ray_endpoint.x-1, ray_endpoint.y-1},
+           {ray_endpoint.x+1, ray_endpoint.y+1}
+           }
+           };
+           GPath bold_tick = gpath_create({4, (GPoint[]) { {center.x+1, center.y+1}, {center.x-1, center.y-1}, {ray_endpoint.x-1, ray_endpoint.y-1}, {ray_endpoint.x+1, ray_endpoint.y+1} } });
+           gpath_draw_filled(ctx, bold_tick); */
+        graphics_draw_line(ctx, ray_endpoint, center);
+    }
+
+
+    graphics_context_set_fill_color(ctx, GColorBlack);
+    graphics_context_set_stroke_color(ctx, GColorBlack);
+    graphics_fill_rect(ctx, GRect(6, 6, bounds.size.w - 12, bounds.size.h - 12), 5, GCornersAll);
+
     //numbers
     graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_context_set_stroke_color(ctx, GColorWhite);
