@@ -21,6 +21,13 @@
                     "compatibility": "2.7",
                     "file": "fonts/BEBAS___.TTF",
                     "name": "FONT_TIME_18",
+                    "targetPlatforms": null,
+                    "type": "font"
+                },
+                {
+                    "file": "fonts/BEBAS___.TTF",
+                    "name": "FONT_TIME_14",
+                    "targetPlatforms": null,
                     "type": "font"
                 }
             ]
