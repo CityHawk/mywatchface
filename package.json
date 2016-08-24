@@ -18,15 +18,15 @@
         "resources": {
             "media": [
                 {
-                    "compatibility": "2.7",
                     "file": "fonts/BEBAS___.TTF",
-                    "name": "FONT_TIME_20",
+                    "name": "FONT_TIME_14",
                     "targetPlatforms": null,
                     "type": "font"
                 },
                 {
+                    "compatibility": "2.7",
                     "file": "fonts/BEBAS___.TTF",
-                    "name": "FONT_TIME_14",
+                    "name": "FONT_TIME_20",
                     "targetPlatforms": null,
                     "type": "font"
                 }

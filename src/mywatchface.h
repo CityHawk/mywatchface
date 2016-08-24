@@ -1,5 +1,9 @@
 #include <pebble.h>
 
+#define LABELSIZE 16
+#define MINLABELOFFSET 10
+#define ANGLEDOFFSET 3
+
 static const GPathInfo MINUTE_HAND_POINTS = {
     6, (GPoint []) {
         { -4, 10 },
@@ -21,3 +25,9 @@ static const GPathInfo HOUR_HAND_POINTS = {
         {-4, -38}
     }
 };
+
+struct Label {
+    char num[3];
+    GPoint point; 
+};
+
