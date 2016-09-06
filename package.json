@@ -1,15 +1,12 @@
 {
-    "author": "MakeAwesomeHappen",
+    "author": "Self",
     "dependencies": {},
     "keywords": [
         "pebble-app"
     ],
-    "name": "mywatchface",
+    "name": "simplehyb",
     "pebble": {
-        "capabilities": [
-            ""
-        ],
-        "displayName": "mywatchface",
+        "displayName": "Simple Hybrid",
         "enableMultiJS": true,
         "messageKeys": [
             "dummy"
@@ -34,11 +31,12 @@
         },
         "sdkVersion": "3",
         "targetPlatforms": [
+            "aplite",
             "basalt"
         ],
         "uuid": "6bf83d5c-2d8c-4f03-86c9-4f9c638b6e8c",
         "watchapp": {
-            "watchface": false
+            "watchface": true
         }
     },
     "version": "1.0.0"

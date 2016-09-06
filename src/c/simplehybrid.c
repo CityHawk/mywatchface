@@ -1,4 +1,4 @@
-#include "mywatchface.h"
+#include "simplehybrid.h"
 #include <pebble.h>
 
 static Window *s_window;
@@ -98,7 +98,12 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
     gpath_rotate_to(s_hour_arrow, (TRIG_MAX_ANGLE * (((t->tm_hour % 12) * 6) + (t->tm_min / 10))) / (12 * 6));
 
 
+    #if defined(PBL_COLOR)
     graphics_context_set_fill_color(ctx, GColorRed);
+    #else
+    graphics_context_set_fill_color(ctx, GColorLightGray);
+    #endif
+    
     gpath_draw_filled(ctx, s_hour_arrow);
     gpath_draw_outline(ctx, s_hour_arrow);
 
@@ -144,14 +149,16 @@ static void ticks_update_proc(Layer *layer, GContext *ctx) {
         graphics_draw_line(ctx, ray_endpoint, center);
     }
 
-    graphics_context_set_fill_color(ctx, GColorOrange);
-    graphics_context_set_stroke_color(ctx, GColorOrange);
+    #if defined(PBL_COLOR)
+    graphics_context_set_fill_color(ctx, GColorChromeYellow);
+    graphics_context_set_stroke_color(ctx, GColorChromeYellow);
 
     int ray_angles[12] = { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60};
     for (int i = 0; i < 12; ++i) {
         GPoint ray_endpoint = gpoint_from_polar(GRect(-50, -50, 244, 244), GOvalScaleModeFitCircle, ray_angles[i] * (TRIG_MAX_ANGLE / 12));
         graphics_draw_line(ctx, ray_endpoint, center);
     }
+    #endif
 
 
     graphics_context_set_fill_color(ctx, GColorBlack);
