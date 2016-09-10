@@ -6,15 +6,19 @@ static Layer *s_ticks_layer;
 static Layer *s_hands_layer;
 static Layer *s_digital_layer;
 static Layer *s_date_layer;
+static BitmapLayer *s_bt_icon_layer;
 static GFont s_time_font;
 static GFont s_label_font;
 static GPath *s_minute_arrow, *s_hour_arrow;
+static GBitmap *s_bt_icon_bitmap;
+
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed);
 static void hands_update_proc(Layer *layer, GContext *ctx);
 static void ticks_update_proc(Layer *layer, GContext *ctx);
 static void digital_update_proc(Layer *layer, GContext *ctx);
 static void date_update_proc(Layer *layer, GContext *ctx);
+static void bluetooth_callback(bool connected);
 
 static void prv_window_load(Window *window) {
 
@@ -23,12 +27,27 @@ static void prv_window_load(Window *window) {
     
     s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TIME_20));
     //s_time_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-    s_label_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TIME_14));
+    s_label_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TIME_16));
     //s_label_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
 
     s_ticks_layer = layer_create(GRect(1, 1, 144, 144));
     layer_set_update_proc(s_ticks_layer, ticks_update_proc);
     layer_add_child(window_layer, s_ticks_layer);
+    
+    // Create the Bluetooth icon GBitmap
+    s_bt_icon_bitmap = gbitmap_create_with_resource(RESOURCE_ID_BT_ICON);
+
+    // Create the BitmapLayer to display the GBitmap
+    s_bt_icon_layer = bitmap_layer_create(GRect(59, 24, 30, 30));
+    bitmap_layer_set_bitmap(s_bt_icon_layer, s_bt_icon_bitmap);
+    layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_bt_icon_layer));
+    
+    // Register for Bluetooth connection updates
+    connection_service_subscribe((ConnectionHandlers) {
+        .pebble_app_connection_handler = bluetooth_callback
+    });
+
+
 
     s_hands_layer = layer_create(GRect(1,1,144,144));
     layer_set_update_proc(s_hands_layer, hands_update_proc);
@@ -48,11 +67,19 @@ static void prv_window_load(Window *window) {
     layer_mark_dirty(s_hands_layer);
     layer_mark_dirty(s_digital_layer);
     layer_mark_dirty(s_date_layer);
+    // Show the correct state of the BT connection from the start
+    bluetooth_callback(connection_service_peek_pebble_app_connection());
+
 }
 
 static void prv_window_unload(Window *window) {
     layer_destroy(s_hands_layer);
     layer_destroy(s_digital_layer);
+    layer_destroy(s_ticks_layer);
+    layer_destroy(s_date_layer);
+    bitmap_layer_destroy(s_bt_icon_layer);
+    gbitmap_destroy(s_bt_icon_bitmap);
+
     // Unload GFont
     fonts_unload_custom_font(s_time_font);
 }
@@ -190,6 +217,17 @@ static void ticks_update_proc(Layer *layer, GContext *ctx) {
     }
 
 }
+
+static void bluetooth_callback(bool connected) {
+  // Show icon if disconnected
+  layer_set_hidden(bitmap_layer_get_layer(s_bt_icon_layer), connected);
+
+  if(!connected) {
+    // Issue a vibrating alert
+    vibes_double_pulse();
+  }
+}
+
 
 int main(void) {
     prv_init();
